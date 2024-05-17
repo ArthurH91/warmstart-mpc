@@ -76,6 +76,28 @@ class Scene:
             OBSTACLE_POSE = pin.SE3.Identity()
             OBSTACLE_POSE.translation = np.array([0.25, -0.4, 1.5])
             obstacles = [("obstacle1", hppfcl.Sphere(OBSTACLE_RADIUS), OBSTACLE_POSE)]
+        elif self._name_scene == "wall":
+            self._target = pin.SE3(
+                pin.utils.rotate("x", np.pi), np.array([0.0, 0.2, 0.8])
+            )
+            self._q0 = np.array(
+                [6.2e-01, 1.7e00, 1.5e00, 6.9e-01, -1.3e00, 1.1e00, 1.5e-01]
+            )
+            OBSTACLE_HEIGHT = 0.85
+            OBSTACLE_X = 2.0e-0
+            OBSTACLE_Y = 0.5e-2
+            OBSTACLE_Z = 0.5
+            obstacles = [
+                (
+                    "obstacle1",
+                    hppfcl.Box(OBSTACLE_X, OBSTACLE_Y, OBSTACLE_Z),
+                    pin.SE3(
+                        pin.utils.rotate("y", np.pi / 2),
+                        np.array([-0.0, -0.1, OBSTACLE_HEIGHT]),
+                    ),
+                ),
+            ]
+            
         else:
             raise NotImplementedError(f"The input {name_scene} is not implemented.")
 
@@ -117,9 +139,24 @@ class Scene:
         elif self._name_scene == "ball":
             obstacles = ["obstacle1"]
             shapes_avoiding_collision = [
+                "support_link_0",
                 "panda2_leftfinger_0",
                 "panda2_rightfinger_0",
                 "panda2_link5_sc_4",
+            ]
+        elif self._name_scene == "wall":
+            obstacles = [
+                "support_link_0",
+                "obstacle1",
+            ]
+            shapes_avoiding_collision = [
+                "panda2_link7_sc_4",
+                "panda2_link7_sc_1",
+                "panda2_link6_sc_2",
+                "panda2_link5_sc_3",
+                "panda2_link5_sc_4",
+                "panda2_rightfinger_0",
+                "panda2_leftfinger_0",
             ]
         for shape in shapes_avoiding_collision:
             # Highlight the shapes of the robot that are supposed to avoid collision
@@ -142,7 +179,7 @@ if __name__ == "__main__":
     rmodel, cmodel, vmodel = robot_wrapper()
 
     scene = Scene()
-    cmodel, target, q0 = scene.create_scene(rmodel, cmodel, "box")
+    cmodel, target, q0 = scene.create_scene(rmodel, cmodel, "wall")
 
     rdata = rmodel.createData()
     cdata = cmodel.createData()
@@ -154,7 +191,6 @@ if __name__ == "__main__":
         robot_collision_model=cmodel,
         TARGET=target,
     )
-    # vis[0].display(pin.randomConfiguration(rmodel))
     vis[0].display(q0)
 
     pin.computeCollisions(rmodel, rdata, cmodel, cdata, pin.neutral(rmodel), False)
