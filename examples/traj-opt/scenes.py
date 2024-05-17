@@ -22,6 +22,10 @@ class Scene:
         self._rmodel = rmodel
 
         if name_scene == "box":
+            
+            self._target = pin.SE3(pin.utils.rotate("x", np.pi), np.array([0.0, 0.2, 0.8]))
+            self._q0 = np.array([6.2e-01,  1.7e+00,  1.5e+00,  6.9e-01, -1.3e+00,  1.1e+00,  1.5e-01])
+            
             OBSTACLE_HEIGHT = 0.85
             OBSTACLE_X = 2.0e-1
             OBSTACLE_Y = 0.5e-2
@@ -32,7 +36,7 @@ class Scene:
                     hppfcl.Box(OBSTACLE_X, OBSTACLE_Y, OBSTACLE_Z),
                     pin.SE3(
                         pin.utils.rotate("y", np.pi / 2),
-                        np.array([-0.0, 0.0, OBSTACLE_HEIGHT]),
+                        np.array([-0.0, -0.1, OBSTACLE_HEIGHT]),
                     ),
                 ),
                 (
@@ -40,7 +44,7 @@ class Scene:
                     hppfcl.Box(OBSTACLE_X, OBSTACLE_Y, OBSTACLE_Z),
                     pin.SE3(
                         pin.utils.rotate("y", np.pi / 2),
-                        np.array([-0.0, 0.45, OBSTACLE_HEIGHT]),
+                        np.array([-0.0, 0.4, OBSTACLE_HEIGHT]),
                     ),
                 ),
                 (
@@ -49,7 +53,7 @@ class Scene:
                     pin.SE3(
                         pin.utils.rotate("y", np.pi / 2)
                         @ pin.utils.rotate("x", np.pi / 2),
-                        np.array([0.25, 0.225, OBSTACLE_HEIGHT]),
+                        np.array([0.25, 0.15, OBSTACLE_HEIGHT]),
                     ),
                 ),
                 (
@@ -58,13 +62,13 @@ class Scene:
                     pin.SE3(
                         pin.utils.rotate("y", np.pi / 2)
                         @ pin.utils.rotate("x", np.pi / 2),
-                        np.array([-0.25, 0.225, OBSTACLE_HEIGHT]),
+                        np.array([-0.25, 0.15, OBSTACLE_HEIGHT]),
                     ),
                 ),
             ]
         else:
             raise NotImplementedError(f"The input {name_scene} is not implemented.")
-        
+
         # Adding all the obstacles to the geom model
         for obstacle in obstacles:
             name = obstacle[0]
@@ -79,9 +83,11 @@ class Scene:
             )
             self._cmodel.addGeometryObject(geom_obj)
         self._add_collision_pairs()
-        return self._cmodel
+        return self._cmodel, self._target, self._q0
 
     def _add_collision_pairs(self):
+        """Add the collision pairs in the collision model w.r.t to the chosen scene.
+        """
         if self._name_scene == "box":
             obstacles = [
                 "support_link_0",
@@ -119,7 +125,7 @@ if __name__ == "__main__":
     rmodel, cmodel, vmodel = robot_wrapper()
 
     scene = Scene()
-    cmodel = scene.create_scene(rmodel, cmodel, "box")
+    cmodel, target, q0 = scene.create_scene(rmodel, cmodel, "box")
 
     rdata = rmodel.createData()
     cdata = cmodel.createData()
@@ -129,7 +135,7 @@ if __name__ == "__main__":
         robot_model=rmodel, robot_visual_model=cmodel, robot_collision_model=cmodel
     )
     # vis[0].display(pin.randomConfiguration(rmodel))
-    vis[0].display(np.array([0.5] * 7))
+    vis[0].display(q0)
 
     pin.computeCollisions(rmodel, rdata, cmodel, cdata, pin.neutral(rmodel), False)
     for k in range(len(cmodel.collisionPairs)):
