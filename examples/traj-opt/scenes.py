@@ -26,62 +26,58 @@ class Scene:
             OBSTACLE_X = 2.0e-1
             OBSTACLE_Y = 0.5e-2
             OBSTACLE_Z = 0.5
-            OBSTACLE1_POSE = pin.SE3(
-                pin.utils.rotate("y", np.pi / 2), np.array([-0.0, 0.0, OBSTACLE_HEIGHT])
-            )
-            OBSTACLE1 = hppfcl.Box(OBSTACLE_X, OBSTACLE_Y, OBSTACLE_Z)
-            OBSTACLE1_GEOM_OBJECT = pin.GeometryObject(
-                "obstacle1",
-                0,
-                0,
-                OBSTACLE1,
-                OBSTACLE1_POSE,
-            )
-            self._cmodel.addGeometryObject(OBSTACLE1_GEOM_OBJECT)
-            OBSTACLE2_POSE = pin.SE3(
-                pin.utils.rotate("y", np.pi / 2),
-                np.array([-0.0, 0.45, OBSTACLE_HEIGHT]),
-            )
-            OBSTACLE2 = hppfcl.Box(OBSTACLE_X, OBSTACLE_Y, OBSTACLE_Z)
-            OBSTACLE2_GEOM_OBJECT = pin.GeometryObject(
-                "obstacle2",
-                0,
-                0,
-                OBSTACLE2,
-                OBSTACLE2_POSE,
-            )
-            self._cmodel.addGeometryObject(OBSTACLE2_GEOM_OBJECT)
-            OBSTACLE3_POSE = pin.SE3(
-                pin.utils.rotate("y", np.pi / 2) @ pin.utils.rotate("x", np.pi / 2),
-                np.array([0.25, 0.225, OBSTACLE_HEIGHT]),
-            )
-            OBSTACLE3 = hppfcl.Box(OBSTACLE_X, OBSTACLE_Y, OBSTACLE_Z)
-            OBSTACLE3_GEOM_OBJECT = pin.GeometryObject(
-                "obstacle3",
-                0,
-                0,
-                OBSTACLE3,
-                OBSTACLE3_POSE,
-            )
-            self._cmodel.addGeometryObject(OBSTACLE3_GEOM_OBJECT)
-            OBSTACLE4_POSE = pin.SE3(
-                pin.utils.rotate("y", np.pi / 2) @ pin.utils.rotate("x", np.pi / 2),
-                np.array([-0.25, 0.225, OBSTACLE_HEIGHT]),
-            )
-            OBSTACLE4 = hppfcl.Box(OBSTACLE_X, OBSTACLE_Y, OBSTACLE_Z)
-            OBSTACLE4_GEOM_OBJECT = pin.GeometryObject(
-                "obstacle4",
-                0,
-                0,
-                OBSTACLE4,
-                OBSTACLE4_POSE,
-            )
-            self._cmodel.addGeometryObject(OBSTACLE4_GEOM_OBJECT)
-
-            q0 = np.array([0.1, 0.7, 0.0, 0.7, -0.5, 1.5, 0.0])
+            obstacles = [
+                (
+                    "obstacle1",
+                    hppfcl.Box(OBSTACLE_X, OBSTACLE_Y, OBSTACLE_Z),
+                    pin.SE3(
+                        pin.utils.rotate("y", np.pi / 2),
+                        np.array([-0.0, 0.0, OBSTACLE_HEIGHT]),
+                    ),
+                ),
+                (
+                    "obstacle2",
+                    hppfcl.Box(OBSTACLE_X, OBSTACLE_Y, OBSTACLE_Z),
+                    pin.SE3(
+                        pin.utils.rotate("y", np.pi / 2),
+                        np.array([-0.0, 0.45, OBSTACLE_HEIGHT]),
+                    ),
+                ),
+                (
+                    "obstacle3",
+                    hppfcl.Box(OBSTACLE_X, OBSTACLE_Y, OBSTACLE_Z),
+                    pin.SE3(
+                        pin.utils.rotate("y", np.pi / 2)
+                        @ pin.utils.rotate("x", np.pi / 2),
+                        np.array([0.25, 0.225, OBSTACLE_HEIGHT]),
+                    ),
+                ),
+                (
+                    "obstacle4",
+                    hppfcl.Box(OBSTACLE_X, OBSTACLE_Y, OBSTACLE_Z),
+                    pin.SE3(
+                        pin.utils.rotate("y", np.pi / 2)
+                        @ pin.utils.rotate("x", np.pi / 2),
+                        np.array([-0.25, 0.225, OBSTACLE_HEIGHT]),
+                    ),
+                ),
+            ]
         else:
             raise NotImplementedError(f"The input {name_scene} is not implemented.")
         
+        # Adding all the obstacles to the geom model
+        for obstacle in obstacles:
+            name = obstacle[0]
+            shape = obstacle[1]
+            pose = obstacle[2]
+            geom_obj = pin.GeometryObject(
+                name,
+                0,
+                0,
+                shape,
+                pose,
+            )
+            self._cmodel.addGeometryObject(geom_obj)
         self._add_collision_pairs()
         return self._cmodel
 
