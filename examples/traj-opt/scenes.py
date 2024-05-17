@@ -3,7 +3,7 @@ import pinocchio as pin
 
 import hppfcl
 
-
+from wrapper_meshcat import YELLOW_FULL
 class Scene:
     def __init__(self) -> None:
         pass
@@ -21,11 +21,14 @@ class Scene:
         self._cmodel = cmodel
         self._rmodel = rmodel
 
-        if name_scene == "box":
-            
-            self._target = pin.SE3(pin.utils.rotate("x", np.pi), np.array([0.0, 0.2, 0.8]))
-            self._q0 = np.array([6.2e-01,  1.7e+00,  1.5e+00,  6.9e-01, -1.3e+00,  1.1e+00,  1.5e-01])
-            
+        self._target = pin.SE3.Identity()
+        if self._name_scene == "box":
+            self._target = pin.SE3(
+                pin.utils.rotate("x", np.pi), np.array([0.0, 0.2, 0.8])
+            )
+            self._q0 = np.array(
+                [6.2e-01, 1.7e00, 1.5e00, 6.9e-01, -1.3e00, 1.1e00, 1.5e-01]
+            )
             OBSTACLE_HEIGHT = 0.85
             OBSTACLE_X = 2.0e-1
             OBSTACLE_Y = 0.5e-2
@@ -66,6 +69,13 @@ class Scene:
                     ),
                 ),
             ]
+        elif self._name_scene == "ball":
+            self._q0 = pin.neutral(self._rmodel)
+            self._target.translation = np.array([0, -0.4, 1.5])
+            OBSTACLE_RADIUS = 1.5e-1
+            OBSTACLE_POSE = pin.SE3.Identity()
+            OBSTACLE_POSE.translation = np.array([0.25, -0.4, 1.5])
+            obstacles = [("obstacle1", hppfcl.Sphere(OBSTACLE_RADIUS), OBSTACLE_POSE)]
         else:
             raise NotImplementedError(f"The input {name_scene} is not implemented.")
 
@@ -86,8 +96,7 @@ class Scene:
         return self._cmodel, self._target, self._q0
 
     def _add_collision_pairs(self):
-        """Add the collision pairs in the collision model w.r.t to the chosen scene.
-        """
+        """Add the collision pairs in the collision model w.r.t to the chosen scene."""
         if self._name_scene == "box":
             obstacles = [
                 "support_link_0",
@@ -105,8 +114,16 @@ class Scene:
                 "panda2_rightfinger_0",
                 "panda2_leftfinger_0",
             ]
-
+        elif self._name_scene == "ball":
+            obstacles = ["obstacle1"]
+            shapes_avoiding_collision = [
+                "panda2_leftfinger_0",
+                "panda2_rightfinger_0",
+                "panda2_link5_sc_4",
+            ]
         for shape in shapes_avoiding_collision:
+            # Highlight the shapes of the robot that are supposed to avoid collision
+            self._cmodel.geometryObjects[self._cmodel.getGeometryId(shape)].meshColor = YELLOW_FULL
             for obstacle in obstacles:
                 self._cmodel.addCollisionPair(
                     pin.CollisionPair(
@@ -132,7 +149,10 @@ if __name__ == "__main__":
     # Generating the meshcat visualizer
     MeshcatVis = MeshcatWrapper()
     vis = MeshcatVis.visualize(
-        robot_model=rmodel, robot_visual_model=cmodel, robot_collision_model=cmodel
+        robot_model=rmodel,
+        robot_visual_model=cmodel,
+        robot_collision_model=cmodel,
+        TARGET=target,
     )
     # vis[0].display(pin.randomConfiguration(rmodel))
     vis[0].display(q0)

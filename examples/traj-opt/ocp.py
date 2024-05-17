@@ -18,8 +18,6 @@ class OCPPandaReachingColWithMultipleCol:
         rmodel: pin.Model,
         cmodel: pin.GeometryModel,
         TARGET_POSE: pin.SE3,
-        OBSTACLE_POSE: pin.SE3,
-        OBSTACLE_RADIUS: float,
         T: int,
         dt: float,
         x0: np.ndarray,
@@ -51,8 +49,6 @@ class OCPPandaReachingColWithMultipleCol:
 
         # Poses & dimensions of the target & obstacle
         self._TARGET_POSE = TARGET_POSE
-        self._OBSTACLE_RADIUS = OBSTACLE_RADIUS
-        self._OBSTACLE_POSE = OBSTACLE_POSE
         self._SAFETY_THRESHOLD = SAFETY_THRESHOLD
 
         # Params of the problem

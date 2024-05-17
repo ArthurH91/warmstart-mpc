@@ -6,7 +6,6 @@ import meshcat
 import meshcat.geometry as g
 
 
-
 RED = np.array([249, 136, 126, 125]) / 255
 RED_FULL = np.array([249, 136, 126, 255]) / 255
 
@@ -17,10 +16,11 @@ BLUE = np.array([144, 169, 183, 125]) / 255
 BLUE_FULL = np.array([144, 169, 183, 255]) / 255
 
 YELLOW = np.array([1, 1, 0, 0.5])
-YELLOW_FULL = np.array([1, 1, 0, 1.])
+YELLOW_FULL = np.array([1, 1, 0, 1.0])
 
 BLACK = np.array([0, 0, 0, 0.5])
-BLACK_FULL = np.array([0, 0, 0, 1.])
+BLACK_FULL = np.array([0, 0, 0, 1.0])
+
 
 def get_transform(T_: hppfcl.Transform3f):
     """Returns a np.ndarray instead of a pin.SE3 or a hppfcl.Transform3f
@@ -45,6 +45,7 @@ def get_transform(T_: hppfcl.Transform3f):
         raise NotADirectoryError
     return T
 
+
 class MeshcatWrapper:
     """Wrapper displaying a robot and a target in a meshcat server."""
 
@@ -65,10 +66,6 @@ class MeshcatWrapper:
     def visualize(
         self,
         TARGET=None,
-        OBSTACLE=None,
-        RADII_TARGET=5e-2,
-        OBSTACLE_DIM=([5e-1, 5e-1, 5e-2]),
-        obstacle_type="sphere",
         robot_model=None,
         robot_collision_model=None,
         robot_visual_model=None,
@@ -94,40 +91,16 @@ class MeshcatWrapper:
         self.viewer = self.create_visualizer()
 
         if TARGET is not None:
-            self._renderSphere("target", dim = RADII_TARGET, pose = TARGET)
+            self._renderSphere("target", dim=5e-2, pose=TARGET)
 
-        if OBSTACLE is not None:
-            if type(OBSTACLE) == tuple:
-                number_obstacle = len(OBSTACLE)
-                # Creating the obstacle
-                for k in range(number_obstacle):
-                    if obstacle_type == "box":
-                        self._renderBox("obstacle" + str(k), OBSTACLE_DIM[k], OBSTACLE[k])
-                    if obstacle_type == "sphere":
-                        self._renderSphere("obstacle" + str(k), OBSTACLE_DIM[k], OBSTACLE[k])
-            else:
-                if obstacle_type == "box":
-                        self._renderBox("obstacle", OBSTACLE_DIM, OBSTACLE)
-                if obstacle_type == "sphere":
-                        self._renderSphere("obstacle", OBSTACLE_DIM, OBSTACLE)
-        elif (
-            robot_model is not None
-            and robot_collision_model is not None
-            and robot_visual_model is not None
-        ):
-            self._rmodel = robot_model
-            self._rcmodel = robot_collision_model
-            self._rvmodel = robot_visual_model
+        self._rmodel = robot_model
+        self._cmodel = robot_collision_model
+        self._vmodel = robot_visual_model
 
         Viewer = pin.visualize.MeshcatVisualizer
 
-        if (
-            robot_model is not None
-            and robot_collision_model is not None
-            and robot_visual_model is not None
-        ):
-            self.viewer_pin = Viewer(
-                robot_model, robot_collision_model, robot_visual_model
+        self.viewer_pin = Viewer(
+            self._rmodel,self._cmodel,self._vmodel
             )
         self.viewer_pin.initViewer(
             viewer=meshcat.Visualizer(zmq_url="tcp://127.0.0.1:6000")
@@ -154,7 +127,7 @@ class MeshcatWrapper:
             self.viewer["/Axes"].set_property("visible", False)
         return self.viewer
 
-    def _renderSphere(self, e_name: str, dim: np.ndarray, pose : pin.SE3, color=GREEN):
+    def _renderSphere(self, e_name: str, dim: np.ndarray, pose: pin.SE3, color=GREEN):
         """Displaying a sphere in a meshcat server.
 
         Parameters
@@ -165,15 +138,13 @@ class MeshcatWrapper:
             array describing the color of the target, by default np.array([1., 1., 1., 1.]) (ie white)
         """
         # Setting the object in the viewer
-        self.viewer[e_name].set_object(
-            g.Sphere(dim), self._meshcat_material(*color)
-        )
+        self.viewer[e_name].set_object(g.Sphere(dim), self._meshcat_material(*color))
         T = get_transform(pose)
 
         # Applying the transformation to the object
         self.viewer[e_name].set_transform(T)
 
-    def _renderBox(self, e_name: str, dim : np.array, pose : pin.SE3, color=YELLOW):
+    def _renderBox(self, e_name: str, dim: np.array, pose: pin.SE3, color=YELLOW):
         """Displaying a sphere in a meshcat server.
 
         Parameters
@@ -184,9 +155,7 @@ class MeshcatWrapper:
             array describing the color of the target, by default np.array([1., 1., 1., 1.]) (ie white)
         """
         # Setting the object in the viewer
-        self.viewer[e_name].set_object(
-            g.Box(dim), self._meshcat_material(*color)
-        )
+        self.viewer[e_name].set_object(g.Box(dim), self._meshcat_material(*color))
 
         # Obtaining its position in the right format
         T = get_transform(pose)
@@ -246,7 +215,9 @@ if __name__ == "__main__":
     rmodel, cmodel, vmodel = robot_wrapper()
     rdata = rmodel.createData()
     cdata = cmodel.createData()
-        # Generating the meshcat visualizer
+    # Generating the meshcat visualizer
     MeshcatVis = MeshcatWrapper()
-    vis = MeshcatVis.visualize(robot_model=rmodel, robot_visual_model=vmodel, robot_collision_model=cmodel)
+    vis = MeshcatVis.visualize(
+        robot_model=rmodel, robot_visual_model=vmodel, robot_collision_model=cmodel
+    )
     vis[0].display(pin.neutral(rmodel))
