@@ -76,42 +76,6 @@ class OCPPandaReachingColWithMultipleCol:
         # Making sure that the frame exists
         assert self._endeff_frame <= len(self._rmodel.frames)
 
-        # Collision pair id
-        k = 0
-
-        # Making sure that the pair of collision exists
-        assert k <= len(self._cmodel.collisionPairs)
-
-        # Collision pair
-        self._collisionPair = self._cmodel.collisionPairs[k]
-
-        # Geometry ID of the shape 1 of collision pair
-        self._id_shape1 = self._collisionPair.first
-
-        # Making sure that the frame exists
-        assert self._id_shape1 <= len(self._cmodel.geometryObjects)
-
-        # Geometry object shape 1
-        self._shape1 = self._cmodel.geometryObjects[self._id_shape1]
-
-        # Shape 1 parent joint
-        self._shape1_parentJoint = self._shape1.parentJoint
-
-        # Geometry ID of the shape 2 of collision pair
-        self._id_shape2 = self._collisionPair.second
-
-        # Making sure that the frame exists
-        assert self._id_shape2 <= len(self._cmodel.geometryObjects)
-
-        # Geometry object shape 2
-        self._shape2 = self._cmodel.geometryObjects[self._id_shape2]
-
-        # Shape 2 parent joint
-        self._shape2_parentJoint = self._shape2.parentJoint
-
-        # Checking that shape 1 is belonging to the robot & shape 2 is the obstacle
-        assert not "obstacle" in self._shape1.name
-        assert "obstacle" in self._shape2.name
 
     def __call__(self) -> Any:
         "Setting up croccodyl OCP"
@@ -153,24 +117,24 @@ class OCPPandaReachingColWithMultipleCol:
             self._state, self._actuation.nu
         )
             # Creating the residual
+        if len(self._cmodel.collisionPairs) != 0:
+            for col_idx in range(len(self._cmodel.collisionPairs)):
+                # obstacleDistanceResidual = ResidualCollision(
+                #     self._state, self._cmodel, self._cdata, col_idx
+                # )
+                obstacleDistanceResidual = ResidualDistanceCollision(self._state, 7, self._cmodel, col_idx)
 
-        for col_idx in range(len(self._cmodel.collisionPairs)):
-            # obstacleDistanceResidual = ResidualCollision(
-            #     self._state, self._cmodel, self._cdata, col_idx
-            # )
-            obstacleDistanceResidual = ResidualDistanceCollision(self._state, 7, self._cmodel, col_idx)
+                # Creating the inequality constraint
+                constraint = crocoddyl.ConstraintModelResidual(
+                    self._state,
+                    obstacleDistanceResidual,
+                    np.array([self._SAFETY_THRESHOLD]),
+                    np.array([np.inf]),
+                )
 
-            # Creating the inequality constraint
-            constraint = crocoddyl.ConstraintModelResidual(
-                self._state,
-                obstacleDistanceResidual,
-                np.array([self._SAFETY_THRESHOLD]),
-                np.array([np.inf]),
-            )
-
-            # Adding the constraint to the constraint manager
-            self._runningConstraintModelManager.addConstraint("col_" + str(col_idx), constraint)
-            self._terminalConstraintModelManager.addConstraint("col_term_" + str(col_idx), constraint)
+                # Adding the constraint to the constraint manager
+                self._runningConstraintModelManager.addConstraint("col_" + str(col_idx), constraint)
+                self._terminalConstraintModelManager.addConstraint("col_term_" + str(col_idx), constraint)
 
         # Bounds costs
 
