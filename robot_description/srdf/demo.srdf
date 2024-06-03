@@ -437,6 +437,22 @@
                       reason="no need"/>
     <disable_collisions link1="support_link" link2="panda2_rightfinger"
                       reason="no need"/>
+    <disable_collisions link1="support_link" link2="panda2_link7_sc"
+                      reason="no need"/>
+    <disable_collisions link1="support_link" link2="panda2_link6_sc"
+                      reason="no need"/>
+    <disable_collisions link1="support_link" link2="panda2_link5_sc"
+                      reason="no need"/>
+    <disable_collisions link1="support_link" link2="panda2_link4_sc"
+                      reason="no need"/>
+    <disable_collisions link1="support_link" link2="panda2_link3_sc"
+                      reason="no need"/>
+    <disable_collisions link1="support_link" link2="panda2_link2_sc"
+                      reason="no need"/>
+    <disable_collisions link1="support_link" link2="panda2_link1_sc"
+                      reason="no need"/>
+    <disable_collisions link1="support_link" link2="panda2_link0_sc"
+                      reason="no need"/>
     <disable_collisions link1="support_link" link2="camera_link"
                       reason="no need"/>
 
@@ -538,7 +554,10 @@
                       reason="no need"/>
 
   <!-- camera_link -->
-
+    <disable_collisions link1="camera_link" link2="panda2_leftfinger"
+                      reason="no need"/>
+    <disable_collisions link1="camera_link" link2="panda2_rightfinger"
+                      reason="no need"/>
     <disable_collisions link1="camera_link" link2="panda2_link7_sc"
                       reason="no need"/>
     <disable_collisions link1="camera_link" link2="panda2_link6_sc"
