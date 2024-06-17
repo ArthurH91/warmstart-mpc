@@ -6,9 +6,9 @@ class Net(nn.Module):
     def __init__(self, nq, T):
         super().__init__()
         self.T, self.nq = T, nq
-        self.fc1 = nn.Linear(nq*2, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, T*nq)
+        self.fc1 = nn.Linear(nq*2, 256)
+        self.fc2 = nn.Linear(256, 256)
+        self.fc3 = nn.Linear(256, T*nq)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))

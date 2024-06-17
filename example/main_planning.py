@@ -30,12 +30,12 @@ T = 20
 robot_wrapper = PandaWrapper(capsule=True, auto_col=True)
 rmodel, cmodel, vmodel = robot_wrapper()
 
-name_scene = "ball"
+name_scene = "wall"
 scene = Scene(name_scene)
 rmodel, cmodel, target, target2, q0 = scene.create_scene_from_urdf(rmodel, cmodel)
 time_calc = []
 results = []
-n_samples = 5000
+n_samples = 6000
 # Use custom progress bar
 with progress_bar as p:
     for i in p.track(range(n_samples)):

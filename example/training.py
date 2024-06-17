@@ -24,7 +24,7 @@ class NumpyDataset(Dataset):
 
 if __name__ == "__main__":
 
-    data = np.load('/home/arthur/Desktop/Code/warmstart-mpc/example/results_ball_5000.npy',  allow_pickle=True)
+    data = np.load('/home/arthur/Desktop/Code/warmstart-mpc/example/results_box_6000.npy',  allow_pickle=True)
     T = len(data[0,2])
     nq = len(data[0,0])
 
@@ -45,8 +45,8 @@ if __name__ == "__main__":
     criterion = nn.MSELoss()
     optimizer = optim.Adam(net.parameters())
 
-    N_epoch = 10
-    print_every = 10
+    N_epoch = 250
+    print_every = 120
 
     print(f"Training data size = {len(train_loader.dataset)}")
     print(f"Validation data size = {len(val_loader.dataset)}")
@@ -85,4 +85,4 @@ if __name__ == "__main__":
     print('Finished Training')
 
     # Save the trained model
-    torch.save(net.state_dict(), 'trained_model_5000.pth')
+    torch.save(net.state_dict(), 'trained_model_box_6000.pth')
