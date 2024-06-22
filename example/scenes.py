@@ -69,7 +69,7 @@ class Scene:
             cmodel (pin.Model): collision model of the robot
         """
 
-        model, collision_model, visual_model = self._load_obstacle_urdf(
+        model, collision_model, _ = self._load_obstacle_urdf(
             self.urdf_filename
         )
         self._rmodel, self._cmodel = pin.appendModel(
