@@ -1,5 +1,4 @@
 import torch.nn as nn
-import torch.nn.functional as F
 import torch
 import torch.optim as optim
 import numpy as np
@@ -26,9 +25,12 @@ class NumpyDataset(Dataset):
 
 
 class Training:
-
     def __init__(self, result_path: str) -> None:
+        """Instanciate the class that trains the model.
 
+        Args:
+            result_path (str): path of the data to be trained.
+        """
         self._data = np.load(result_path, allow_pickle=True)
         self._T = len(self._data[0, 2])
         self._nq = len(self._data[0, 0])
@@ -40,7 +42,7 @@ class Training:
         """Set the training variables to create the data loaders.
 
         Args:
-            batch_size (int, optional): _description_. Defaults to 32.
+            batch_size (int, optional): Batch size of the datasets for the training. Defaults to 32.
         """
         train_size = int(0.8 * len(self._dataset))
         val_size = len(self._dataset) - train_size
@@ -99,13 +101,15 @@ class Training:
         val_loss /= len(self._val_loader)
         print(f"Epoch [{n_epoch + 1}/{self._N_epoch}], Validation Loss: {val_loss:.4f}")
 
-    def train_and_eval(self, N_epoch, print_every=120, batch_size=32, path= ""):
+    def train_and_eval(self, N_epoch = 250, print_every=120, batch_size=32, path= ""):
         """Train and eval the NN.
 
         Args:
-            N_epoch (_type_): _description_
-            print_every (int, optional): _description_. Defaults to 120.
-            batch_size (int, optional): _description_. Defaults to 32.
+            N_epoch (int, optional): Number of epoch during with the network will be trained. Defaults to 250.
+            print_every (int, optional): Number of iterations between each print. Defaults to 120.
+            batch_size (int, optional): Batch size of the datasets for the training. Defaults to 32.
+
+            
         """
         self._print_every = print_every
         self._batch_size = batch_size
