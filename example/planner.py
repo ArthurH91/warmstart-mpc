@@ -1,3 +1,4 @@
+from typing import Tuple
 from os.path import dirname, join, abspath
 
 import numpy as np
@@ -26,26 +27,34 @@ class Planner:
         self._rmodel = rmodel
         self._cmodel = cmodel
 
+        # Scene describing the problem
         self._scene = scene
         self._end_effector_id = self._rmodel.getFrameId("panda2_leftfinger")
 
+        # Number of nodes describing the trajectory
         self._T = T
 
     def _create_planning_scene(self):
+        """Creates the planning scene, sets the viewer factory and the problem solver.
+        """
 
+        # Registers the urdf paths for the robot and the srdf
         obstacle_urdf, urdf_robot_path, srdf_robot_path = self._get_urdf_srdf_paths()
         Robot.urdfFilename = urdf_robot_path
         Robot.srdfFilename = srdf_robot_path
 
+        # Sets the problem anew
         Client().problem.resetProblem()
 
+        # Creates the robot, the problem solver and the factory
         robot = Robot("panda", rootJointType="anchor")
         self._ps = ProblemSolver(robot)
         vf = ViewerFactory(self._ps)
 
+        # Loads the URDF of the obstacle
         vf.loadObstacleModel(obstacle_urdf, self._scene._name_scene)
-
-        obstacles_list = self._scene._obstacles_name
+        
+        # For each obstacle, move the obstacle to its given pose in the collision model
         for obstacle in self._cmodel.geometryObjects:
             if "obstacle" in obstacle.name:
                 name = join(self._scene._name_scene, obstacle.name)
@@ -58,30 +67,47 @@ class Planner:
         self._v = vf.createViewer(collisionURDF=True)
 
     def _setup_planner(self):
-
+        """Setting up the planner by create the scene and finding proper q_init and q_goal.
+        """
+        
+        # Setting up the problem solver and the viewer Factory
         self._create_planning_scene()
-
+        
+        # col, col1 = True, True
+        # while col == True and col1 == True:
+            # Generating feasible goal and init pose
         self._q_init = self._generate_feasible_configurations_array()
         self._q_goal = self._generate_feasible_configurations_array()
 
-        rdata = self._rmodel.createData()
-        cdata = self._cmodel.createData()
-        col = pin.computeCollisions(
-            self._rmodel, rdata, self._cmodel, cdata, self._q_init, True
-        )
-        col1 = pin.computeCollisions(
-            self._rmodel, rdata, self._cmodel, cdata, self._q_goal, True
-        )
+            # # Creating the data models
+            # rdata = self._rmodel.createData()
+            # cdata = self._cmodel.createData()
+            
+            # # Checking whether there is collision for the  
+            # col = pin.computeCollisions(
+            #     self._rmodel, rdata, self._cmodel, cdata, self._q_init, True
+            # )
+            # col1 = pin.computeCollisions(
+            #     self._rmodel, rdata, self._cmodel, cdata, self._q_goal, True
+            # )
+        
+        # Transforming the np.ndarray of pinocchio into a list with the gripper included for hpp
         q_init_list = self._q_init.tolist() + [0] + [0]
         q_goal_list = self._q_goal.tolist() + [0] + [0]
         self._v(q_init_list)
+        
+        # Setting up the path planner
         self._ps.selectPathPlanner("BiRRT*")
         self._ps.setMaxIterPathPlanning(100)
         self._ps.setInitialConfig(q_init_list)
         self._ps.addGoalConfig(q_goal_list)
 
-    def solve_and_optimize(self):
+    def solve_and_optimize(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Solve and optimize the solution found by the planner.
 
+        Returns:
+            Tuple[np.ndarray, np.ndarray, np.ndarray]: Returns the initial configuration, the goal configuration and the trajectory segmented in T configurations.
+        """
         self._setup_planner()
         self._ps.solve()
         self._ps.getAvailable("pathoptimizer")
@@ -94,19 +120,12 @@ class Planner:
         ]
         return self._q_init, self._q_goal, np.array(X)
 
-    def _generate_feasible_configurations(self):
+    def _generate_feasible_configurations_array(self) -> np.ndarray:
         """Genereate a random feasible configuration of the robot. 
 
         Returns:
-            q np.ndarray: configuration vector of the robot.
+            np.ndarray: configuration of the robot
         """
-        q = pin.randomConfiguration(self._rmodel)
-        while self._check_collisions(q):
-            q = pin.randomConfiguration(self._rmodel)
-        return q
-
-    def _generate_feasible_configurations_array(self):
-        
         col = True
         while col:
             q = np.zeros(self._rmodel.nq)
@@ -126,6 +145,8 @@ class Planner:
 
         rdata = self._rmodel.createData()
         cdata = self._cmodel.createData()
+        pin.forwardKinematics(self._rmodel, rdata,q)
+        pin.updateGeometryPlacements(self._rmodel, rdata, self._cmodel, cdata, q)
         col = pin.computeCollisions(self._rmodel, rdata, self._cmodel, cdata, q, True)
         return col
 
