@@ -47,7 +47,9 @@ class Eval:
         inputs = np.concatenate((q_init, q_goal))
         with torch.no_grad():
             output = self._net(torch.tensor(inputs, dtype=torch.float32))
-        return output.numpy()[0]
+        output = output.numpy()[0]
+        x = [np.concatenate((output[k], np.zeros(self._nq))) for k in range(len(output))]
+        return x
         
         
 if __name__ == "__main__":
