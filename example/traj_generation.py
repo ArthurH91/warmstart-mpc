@@ -35,7 +35,7 @@ scene = Scene(name_scene)
 rmodel, cmodel, target, target2, q0 = scene.create_scene_from_urdf(rmodel, cmodel)
 time_calc = []
 results = []
-n_samples = 6000
+n_samples = 10
 # Use custom progress bar
 with progress_bar as p:
     for i in p.track(range(n_samples)):
