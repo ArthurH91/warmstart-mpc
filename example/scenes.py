@@ -3,8 +3,6 @@ from os.path import dirname, join, abspath
 import numpy as np
 import pinocchio as pin
 
-import hppfcl
-
 YELLOW_FULL = np.array([1, 1, 0, 1.0])
 
 
